@@ -37,7 +37,6 @@ public class Main {
                 bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
             }
 
-
             outputStream.write(bytes);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
