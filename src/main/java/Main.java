@@ -28,9 +28,15 @@ public class Main {
             System.out.println(data);
 
             final OutputStream outputStream = clientSocket.getOutputStream();
-            byte[] bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
 
-            if ("ping\nping".equals(data)) {
+            byte[] bytes = null;
+
+            if ("DOCS".equals(data)) {
+                outputStream.write("$0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+            }
+            if ("ping".equals(data)) {
+                bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
+            } else {
                 bytes = "$0\r\n\r\n*2\r\n$4\r\nPONG\r\n$4\r\nPONG\r\n".getBytes(StandardCharsets.UTF_8);
             }
 
