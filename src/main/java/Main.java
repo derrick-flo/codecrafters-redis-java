@@ -28,8 +28,12 @@ public class Main {
             System.out.println(data);
 
             final OutputStream outputStream = clientSocket.getOutputStream();
-            final byte[] bytes = "$0\r\n\r\n*2\r\n$4\r\nPONG\r\n$4\r\nPONG\r\n".getBytes(StandardCharsets.UTF_8);
-//            final byte[] bytes = "$0\r\n\r\n".getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
+
+            if ("ping\nping".equals(data)) {
+                bytes = "$0\r\n\r\n*2\r\n$4\r\nPONG\r\n$4\r\nPONG\r\n".getBytes(StandardCharsets.UTF_8);
+            }
+
             outputStream.write(bytes);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
