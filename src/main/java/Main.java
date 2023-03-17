@@ -31,14 +31,12 @@ public class Main {
 
             byte[] bytes = null;
 
-            if ("DOCS".equals(data)) {
-                outputStream.write("$0\r\n\r\n".getBytes(StandardCharsets.UTF_8));
-            }
-            if ("*1\r\n$4\r\nping\r\n".equals(data)) {
-                bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
-            } else {
+            if (data.contains("DOCS")) {
                 bytes = "$0\r\n\r\n*2\r\n$4\r\nPONG\r\n$4\r\nPONG\r\n".getBytes(StandardCharsets.UTF_8);
+            } else if (data.contains("ping")) {
+                bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
             }
+
 
             outputStream.write(bytes);
         } catch (IOException e) {
