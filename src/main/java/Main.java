@@ -1,10 +1,8 @@
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,24 +18,20 @@ public class Main {
             serverSocket.setReuseAddress(true);
             // Wait for connection from client.
             clientSocket = serverSocket.accept();
-            byte[] byteArr = new byte[100];
-            InputStream inputStream = clientSocket.getInputStream();
-            int readByteCount = inputStream.read(byteArr);
-            String data = new String(byteArr, 0, readByteCount, "UTF-8");
-
-            System.out.println(data);
-
+            final BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             final OutputStream outputStream = clientSocket.getOutputStream();
 
-            byte[] bytes = null;
-
-            if (data.contains("DOCS")) {
-                bytes = "$0\r\n\r\n*2\r\n$4\r\nPONG\r\n$4\r\nPONG\r\n".getBytes(StandardCharsets.UTF_8);
-            } else if (data.contains("ping")) {
-                bytes = "+PONG\r\n".getBytes(StandardCharsets.UTF_8);
+            String line;
+            while((line = in.readLine()) != null) {
+                System.out.println("just debug : " + line);
+                if (line.equals("ping")) {
+                    outputStream.write("+PONG\r\n".getBytes());
+                } else if (line.equals("DOCS")) {
+                    outputStream.write("+\r\n".getBytes());
+                }
             }
+            clientSocket.close();
 
-            outputStream.write(bytes);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         } finally {
