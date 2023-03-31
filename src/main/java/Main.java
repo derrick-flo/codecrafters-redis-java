@@ -26,9 +26,9 @@ public class Main {
                         String line;
                         while((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
-                            if (line.equals("ping")) {
+                            if (line.equalsIgnoreCase("ping")) {
                                 outputStream.write("+PONG\r\n".getBytes());
-                            } else if (line.equals("DOCS")) {
+                            } else if (line.equalsIgnoreCase("DOCS")) {
                                 outputStream.write("+\r\n".getBytes());
                             }
                         }
