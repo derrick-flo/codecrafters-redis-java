@@ -7,7 +7,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException{
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
 
@@ -44,6 +44,7 @@ public class Main {
                     }
                 });
                 thread.start();
+                thread.join(); // 메인스레드가 호출한 곳에서 기다림
                 System.out.println("----end----");
             }
 
