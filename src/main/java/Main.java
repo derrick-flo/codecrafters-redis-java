@@ -20,15 +20,14 @@ public class Main {
                 clientSocket = serverSocket.accept();
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 OutputStream outputStream = clientSocket.getOutputStream();
-
                 new Thread(() -> {
                     try {
                         String line;
                         while((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
-                            if (line.equalsIgnoreCase("ping")) {
+                            if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
-                            } else if (line.equalsIgnoreCase("DOCS")) {
+                            } else if ("DOCS".equalsIgnoreCase(line)) {
                                 outputStream.write("+\r\n".getBytes());
                             }
                         }
@@ -36,7 +35,6 @@ public class Main {
                         throw new RuntimeException(e);
                     }
                 }).run();
-
                 clientSocket.close();
             }
 
