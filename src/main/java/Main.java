@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class Main {
     public static void main(String[] args) {
@@ -17,20 +15,21 @@ public class Main {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
             // Wait for connection from client.
-            clientSocket = serverSocket.accept();
-            final BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            final OutputStream outputStream = clientSocket.getOutputStream();
+            while (true) {
+                clientSocket = serverSocket.accept();
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                OutputStream outputStream = clientSocket.getOutputStream();
 
-            String line;
-            while((line = in.readLine()) != null) {
-                System.out.println("just debug : " + line);
-                if (line.equals("ping")) {
-                    outputStream.write("+PONG\r\n".getBytes());
-                } else if (line.equals("DOCS")) {
-                    outputStream.write("+\r\n".getBytes());
-                }
+                final Socket finalClientSocket = clientSocket;
+                final Thread thread = new Thread(() -> {
+                    try {
+                        execute(in, outputStream, finalClientSocket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                thread.run();
             }
-            clientSocket.close();
 
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
@@ -43,5 +42,18 @@ public class Main {
                 System.out.println("IOException: " + e.getMessage());
             }
         }
+    }
+
+    private static void execute(final BufferedReader in, final OutputStream outputStream, Socket clientSocket) throws IOException {
+        String line;
+        while((line = in.readLine()) != null) {
+            System.out.println("just debug : " + line);
+            if (line.equals("ping")) {
+                outputStream.write("+PONG\r\n".getBytes());
+            } else if (line.equals("DOCS")) {
+                outputStream.write("+\r\n".getBytes());
+            }
+        }
+        clientSocket.close();
     }
 }
