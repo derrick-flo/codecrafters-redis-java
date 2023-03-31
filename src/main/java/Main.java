@@ -20,15 +20,23 @@ public class Main {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 OutputStream outputStream = clientSocket.getOutputStream();
 
-                final Socket finalClientSocket = clientSocket;
-                final Thread thread = new Thread(() -> {
+                new Thread(() -> {
                     try {
-                        execute(in, outputStream, finalClientSocket);
+                        String line;
+                        while((line = in.readLine()) != null) {
+                            System.out.println("just debug : " + line);
+                            if (line.equals("ping")) {
+                                outputStream.write("+PONG\r\n".getBytes());
+                            } else if (line.equals("DOCS")) {
+                                outputStream.write("+\r\n".getBytes());
+                            }
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                });
-                thread.run();
+                }).run();
+
+                clientSocket.close();
             }
 
         } catch (IOException e) {
@@ -42,18 +50,5 @@ public class Main {
                 System.out.println("IOException: " + e.getMessage());
             }
         }
-    }
-
-    private static void execute(final BufferedReader in, final OutputStream outputStream, Socket clientSocket) throws IOException {
-        String line;
-        while((line = in.readLine()) != null) {
-            System.out.println("just debug : " + line);
-            if (line.equals("ping")) {
-                outputStream.write("+PONG\r\n".getBytes());
-            } else if (line.equals("DOCS")) {
-                outputStream.write("+\r\n".getBytes());
-            }
-        }
-        clientSocket.close();
     }
 }
