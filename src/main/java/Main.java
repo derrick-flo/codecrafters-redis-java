@@ -4,10 +4,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException{
+    public static void main(String[] args) throws Exception {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
 
@@ -28,7 +27,13 @@ public class Main {
                         String line;
                         while ((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
-                            if ("ping".equalsIgnoreCase(line)) {
+                            if (line.contains("ECHO")) {
+                                final String[] split = line.split("\r\n");
+                                final String echoStr = split[split.length - 1];
+                                final String res = "+" + echoStr + "\r\n";
+                                outputStream.write(res.getBytes());
+                            } else if ("ping".equalsIgnoreCase(line)) {
+                            } else if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
                             } else if ("DOCS".equalsIgnoreCase(line)) {
                                 outputStream.write("+\r\n".getBytes());
@@ -44,22 +49,9 @@ public class Main {
                     }
                 });
                 thread.start();
-                thread.join(); // 메인스레드가 호출한 곳에서 기다림
-                System.out.println("----end----");
             }
-
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-//            try {
-//                if (clientSocket != null) {
-//                    clientSocket.close();
-//                }
-//            } catch (IOException e) {
-//                System.out.println("IOException: " + e.getMessage());
-//            }
         }
     }
 }
