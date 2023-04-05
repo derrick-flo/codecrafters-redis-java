@@ -33,7 +33,6 @@ public class Main {
                                 final String res = "+" + echoStr + "\r\n";
                                 outputStream.write(res.getBytes());
                             } else if ("ping".equalsIgnoreCase(line)) {
-                            } else if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
                             } else if ("DOCS".equalsIgnoreCase(line)) {
                                 outputStream.write("+\r\n".getBytes());
