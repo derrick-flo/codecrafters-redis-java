@@ -33,8 +33,10 @@ public class Main {
 
                             if ("echo".equalsIgnoreCase(line)) {
                                 beforeExistsEcho = true;
+                            } else if (!"echo".equalsIgnoreCase(line) && line.startsWith("$")) {
                             } else if (!"echo".equalsIgnoreCase(line) && beforeExistsEcho) {
                                 String res = "+" + line + "\r\n";
+                                beforeExistsEcho = false;
                                 outputStream.write(res.getBytes());
                             } else if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
