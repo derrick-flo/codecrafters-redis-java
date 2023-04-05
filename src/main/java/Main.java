@@ -22,15 +22,19 @@ public class Main {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 OutputStream outputStream = clientSocket.getOutputStream();
 
+
+
                 final Thread thread = new Thread(() -> {
+                    boolean beforeExistsEcho = false;
                     try {
                         String line;
                         while ((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
-                            if (line.contains("ECHO")) {
-                                final String[] split = line.split("\r\n");
-                                final String echoStr = split[split.length - 1];
-                                final String res = "+" + echoStr + "\r\n";
+
+                            if ("echo".equalsIgnoreCase(line)) {
+                                beforeExistsEcho = true;
+                            } else if (!"echo".equalsIgnoreCase(line) && beforeExistsEcho) {
+                                String res = "+" + line + "\r\n";
                                 outputStream.write(res.getBytes());
                             } else if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
