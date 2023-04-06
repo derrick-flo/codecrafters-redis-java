@@ -45,6 +45,7 @@ public class Main {
                                 if (res != null) {
                                     outputStream.write(res.getBytes());
                                 }
+                                outputStream.write("$-1\r\n".getBytes());
                                 beforeGetCommand = false;
                             } else if (line.equalsIgnoreCase("SET")) {
                                 beforeSetCommand = true;
@@ -53,7 +54,7 @@ public class Main {
                             } else if (beforeSetCommand && key != null) {
                                 final String res = memory.put(key, line);
                                 if (res != null) {
-                                    outputStream.write("OK".getBytes());
+                                    outputStream.write("+OK\r\n".getBytes());
                                 }
                                 beforeSetCommand = false;
                                 key = null;
