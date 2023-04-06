@@ -25,10 +25,20 @@ public class Main {
             // Wait for connection from client.
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                Scanner scanner = new Scanner(clientSocket.getInputStream());
-                OutputStream outputStream = clientSocket.getOutputStream();
 
                 Thread thread = new Thread(() -> {
+                    Scanner scanner = null;
+                    try {
+                        scanner = new Scanner(clientSocket.getInputStream());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    OutputStream outputStream = null;
+                    try {
+                        outputStream = clientSocket.getOutputStream();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     List<String> commands = new ArrayList<>();
                     int commandCount = 0;
 
@@ -100,12 +110,12 @@ public class Main {
                             }
                         }
 
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     try {
                         clientSocket.close();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
 
