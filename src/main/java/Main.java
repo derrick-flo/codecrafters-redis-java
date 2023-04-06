@@ -59,6 +59,7 @@ public class Main {
                             }
                         }
 
+
                         for (final String command : commands) {
                             if (command.equalsIgnoreCase("GET")) {
                                 final int getIndex = commands.indexOf(command);
