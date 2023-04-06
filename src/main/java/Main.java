@@ -27,36 +27,42 @@ public class Main {
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 OutputStream outputStream = clientSocket.getOutputStream();
 
-
-
                 final Thread thread = new Thread(() -> {
-                    boolean beforeExistsEcho = false;
+                    boolean beforeExistsCommand = false;
+                    boolean beforeSetCommand = false;
+                    boolean beforeGetCommand = false;
+                    String key = null;
+                    String value = null;
                     try {
                         String line;
                         while ((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
 
-                            if (line.contains("GET")) {
-                                final String[] splitStr = line.split(" ");
-                                String key = splitStr[1];
-                                final String res = memory.get(key);
+                            if (line.equalsIgnoreCase("GET")) {
+                                beforeGetCommand = true;
+                            } else if (beforeGetCommand) {
+                                final String res = memory.get(line);
                                 if (res != null) {
                                     outputStream.write(res.getBytes());
                                 }
-                            } else if (line.contains("SET")) {
-                                final String[] splitStr = line.split(" ");
-                                String key = splitStr[1];
-                                String value = splitStr[2];
-                                final String res = memory.put(key, value);
+                                beforeGetCommand = false;
+                            } else if (line.equalsIgnoreCase("SET")) {
+                                beforeSetCommand = true;
+                            } else if (beforeSetCommand && key == null) {
+                                key = line;
+                            } else if (beforeSetCommand && key != null) {
+                                final String res = memory.put(key, line);
                                 if (res != null) {
                                     outputStream.write("OK".getBytes());
                                 }
+                                beforeSetCommand = false;
+                                key = null;
                             } else if ("echo".equalsIgnoreCase(line)) {
-                                beforeExistsEcho = true;
+                                beforeExistsCommand = true;
                             } else if (!"echo".equalsIgnoreCase(line) && line.startsWith("$")) {
-                            } else if (!"echo".equalsIgnoreCase(line) && beforeExistsEcho) {
+                            } else if (!"echo".equalsIgnoreCase(line) && beforeExistsCommand) {
                                 String res = "+" + line + "\r\n";
-                                beforeExistsEcho = false;
+                                beforeExistsCommand = false;
                                 outputStream.write(res.getBytes());
                             } else if ("ping".equalsIgnoreCase(line)) {
                                 outputStream.write("+PONG\r\n".getBytes());
