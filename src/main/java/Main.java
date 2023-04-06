@@ -1,5 +1,4 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -37,7 +36,6 @@ public class Main {
                         while (scanner.hasNext()) {
                             String line = scanner.nextLine();
                             System.out.println("just debug : " + line);
-
                             if (line.startsWith("*")) {
                                 commandCount = Integer.valueOf(line.substring(1));
                                 continue;
@@ -45,13 +43,21 @@ public class Main {
                             if (line.startsWith("$")) {
                                 continue;
                             }
+                            if (line.contains("\n")) {
+                                System.out.println(line);
+                            }
                             commands.add(line);
-                            if(commands.size() == commandCount) {
+                            if (line.equalsIgnoreCase("DOCS")) {
+                                outputStream.write(bytesForOutputStream(""));
+                                commands.clear();
+                            } else if (line.equalsIgnoreCase("PING")) {
+                                outputStream.write(bytesForOutputStream("PONG"));
+                                commands.clear();
+                            }
+                            if (commands.size() == commandCount) {
                                 break;
                             }
                         }
-
-                        System.out.println(commands);
 
                         for (final String command : commands) {
                             if (command.equalsIgnoreCase("GET")) {
@@ -84,16 +90,18 @@ public class Main {
                                 final String echoCommand = commands.get(echoIndex + 1);
 
                                 outputStream.write(bytesForOutputStream(echoCommand));
-                            } else if (command.equalsIgnoreCase("PING")) {
-                                outputStream.write(bytesForOutputStream("PONG"));
-                            } else if (command.equalsIgnoreCase("DOCS")) {
-                                outputStream.write(bytesForOutputStream(""));
                             }
                         }
 
-                        clientSocket.close();
-                    } catch (Exception e) {
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
+                    try {
+                        clientSocket.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
                 });
                 thread.start();
             }
