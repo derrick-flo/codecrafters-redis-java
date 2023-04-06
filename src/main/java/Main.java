@@ -65,7 +65,14 @@ public class Main {
                                 final String key = commands.get(getIndex + 1);
 
                                 final ValueWithOptions res = MEMORY.get(key);
-                                if (res == null || isExpired(res.getExpiredTime(), res.getSetTime())) {
+//                                System.out.println(res.value + " " + res.setTime + " " + res.expiredTime);
+                                if (res == null) {
+                                    outputStream.write("$-1\r\n".getBytes());
+                                    continue;
+                                }
+                                if (res != null && isExpired(res.getExpiredTime(), res.getSetTime())) {
+
+                                    System.out.println("expired :" + res.getExpiredTime() + "setTime : " + res.getSetTime());
                                     MEMORY.remove(key);
                                     outputStream.write("$-1\r\n".getBytes());
                                     continue;
@@ -115,9 +122,12 @@ public class Main {
     }
 
     private static boolean isExpired(final Long expiredTime, final Long setTime) {
+        if (expiredTime == 0) {
+            return false;
+        }
         long diffCurrentAndSetTime = System.currentTimeMillis() - setTime;
 
-        return expiredTime != null && expiredTime <= diffCurrentAndSetTime;
+        return expiredTime <= diffCurrentAndSetTime;
     }
 
     static class ValueWithOptions {
