@@ -43,16 +43,13 @@ public class Main {
                             if (line.startsWith("$")) {
                                 continue;
                             }
-                            if (line.contains("\n")) {
-                                System.out.println(line);
-                            }
                             commands.add(line);
                             if (line.equalsIgnoreCase("DOCS")) {
+                                commands.clear();
                                 outputStream.write(bytesForOutputStream(""));
-                                commands.clear();
                             } else if (line.equalsIgnoreCase("PING")) {
-                                outputStream.write(bytesForOutputStream("PONG"));
                                 commands.clear();
+                                outputStream.write(bytesForOutputStream("PONG"));
                             }
                             if (commands.size() == commandCount) {
                                 break;
@@ -66,19 +63,18 @@ public class Main {
                                 final String key = commands.get(getIndex + 1);
 
                                 final ValueWithOptions res = MEMORY.get(key);
-//                                System.out.println(res.value + " " + res.setTime + " " + res.expiredTime);
                                 if (res == null) {
                                     outputStream.write("$-1\r\n".getBytes());
-                                    continue;
+                                    break;
                                 }
                                 if (res != null && isExpired(res.getExpiredTime(), res.getSetTime())) {
 
-                                    System.out.println("expired :" + res.getExpiredTime() + "setTime : " + res.getSetTime());
                                     MEMORY.remove(key);
                                     outputStream.write("$-1\r\n".getBytes());
-                                    continue;
+                                    break;
                                 }
                                 outputStream.write(bytesForOutputStream(res.getValue()));
+                                break;
                             } else if (command.equalsIgnoreCase("SET")) {
                                 final int setIndex = commands.indexOf(command);
 
@@ -93,11 +89,14 @@ public class Main {
                                 }
                                 MEMORY.put(key, new ValueWithOptions(value, pxTime, System.currentTimeMillis()));
                                 outputStream.write(bytesForOutputStream("OK"));
+
+                                break;
                             } else if (command.equalsIgnoreCase("ECHO")) {
                                 final int echoIndex = commands.indexOf(command);
                                 final String echoCommand = commands.get(echoIndex + 1);
 
                                 outputStream.write(bytesForOutputStream(echoCommand));
+                                break;
                             }
                         }
 
