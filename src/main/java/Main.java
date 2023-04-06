@@ -4,8 +4,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
+
+    public static Map<String, String> memory = new HashMap<>();
+
     public static void main(String[] args) throws Exception {
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         System.out.println("Logs from your program will appear here!");
@@ -31,7 +36,22 @@ public class Main {
                         while ((line = in.readLine()) != null) {
                             System.out.println("just debug : " + line);
 
-                            if ("echo".equalsIgnoreCase(line)) {
+                            if (line.contains("GET")) {
+                                final String[] splitStr = line.split(" ");
+                                String key = splitStr[1];
+                                final String res = memory.get(key);
+                                if (res != null) {
+                                    outputStream.write(res.getBytes());
+                                }
+                            } else if (line.contains("SET")) {
+                                final String[] splitStr = line.split(" ");
+                                String key = splitStr[1];
+                                String value = splitStr[2];
+                                final String res = memory.put(key, value);
+                                if (res != null) {
+                                    outputStream.write("OK".getBytes());
+                                }
+                            } else if ("echo".equalsIgnoreCase(line)) {
                                 beforeExistsEcho = true;
                             } else if (!"echo".equalsIgnoreCase(line) && line.startsWith("$")) {
                             } else if (!"echo".equalsIgnoreCase(line) && beforeExistsEcho) {
