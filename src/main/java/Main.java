@@ -1,10 +1,12 @@
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
@@ -24,99 +26,84 @@ public class Main {
             // Wait for connection from client.
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                Scanner scanner = new Scanner(clientSocket.getInputStream());
                 OutputStream outputStream = clientSocket.getOutputStream();
 
                 Thread thread = new Thread(() -> {
-                    boolean beforeExistsCommand = false;
-                    boolean beforeGetCommand = false;
-                    boolean beforeSetCommand = false;
-                    boolean beforePxCommand = false;
+                    List<String> commands = new ArrayList<>();
                     int commandCount = 0;
-                    String key = null;
-                    Long px = null;
 
                     try {
-                        String line;
-                        while ((line = in.readLine()) != null) {
+                        while (scanner.hasNext()) {
+                            String line = scanner.nextLine();
                             System.out.println("just debug : " + line);
 
                             if (line.startsWith("*")) {
                                 commandCount = Integer.valueOf(line.substring(1));
+                                continue;
                             }
-                            if (line.equalsIgnoreCase("GET")) {
-                                beforeGetCommand = true;
-                            } else if (beforeGetCommand && line.startsWith("$")) {
-                            } else if (beforeGetCommand) {
-                                final ValueWithOptions res = MEMORY.get(line);
-                                beforeGetCommand = false;
-                                commandCount = 0;
-                                if (res != null) {
-                                    if (isExpired(res.expiredTime, res.setTime)) {
-                                        MEMORY.remove(line);
-                                        outputStream.write("$-1\r\n".getBytes());
-                                        continue;
-                                    }
-                                    String realRes = "+" + res.value + "\r\n";
-                                    outputStream.write(realRes.getBytes());
-                                } else {
-                                    outputStream.write("$-1\r\n".getBytes());
-                                }
-                            } else if (line.equalsIgnoreCase("SET")) {
-                                beforeSetCommand = true;
-                            } else if (line.equalsIgnoreCase("PX")) {
-                                beforePxCommand = true;
-                            } else if (beforeSetCommand && line.startsWith("$")) {
-                            } else if (beforePxCommand && line.startsWith("$")) {
-                            } else if (beforeSetCommand && key == null) {
-                                key = line;
-                            } else if (beforePxCommand && px == null) {
-                                px = Long.valueOf(line);
+                            if (line.startsWith("$")) {
+                                continue;
                             }
-
-                            if (beforePxCommand && px != null && commandCount == 5) {
-                                ValueWithOptions valueWithOptions = new ValueWithOptions(key, px, System.currentTimeMillis());
-                                MEMORY.put(key, valueWithOptions);
-                                beforePxCommand = false;
-                                beforeSetCommand = false;
-                                key = null;
-                                px = null;
-                                commandCount = 0;
-                                outputStream.write("+OK\r\n".getBytes());
-                            } else if (beforeSetCommand && key != null && commandCount == 3) {
-                                ValueWithOptions valueWithOptions = new ValueWithOptions(key, null, System.currentTimeMillis());
-                                MEMORY.put(key, valueWithOptions);
-                                beforeSetCommand = false;
-                                key = null;
-                                commandCount = 0;
-                                outputStream.write("+OK\r\n".getBytes());
-                            } else if ("echo".equalsIgnoreCase(line)) {
-                                beforeExistsCommand = true;
-                            } else if (!"echo".equalsIgnoreCase(line) && line.startsWith("$")) {
-                            } else if (!"echo".equalsIgnoreCase(line) && beforeExistsCommand) {
-                                String res = "+" + line + "\r\n";
-                                beforeExistsCommand = false;
-                                commandCount = 0;
-                                outputStream.write(res.getBytes());
-                            } else if ("ping".equalsIgnoreCase(line)) {
-                                commandCount = 0;
-                                outputStream.write("+PONG\r\n".getBytes());
-                            } else if ("DOCS".equalsIgnoreCase(line)) {
-                                commandCount = 0;
-                                outputStream.write("+\r\n".getBytes());
+                            commands.add(line);
+                            if(commands.size() == commandCount) {
+                                break;
                             }
                         }
-                        clientSocket.close();
 
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        System.out.println(commands);
+
+                        for (final String command : commands) {
+                            if (command.equalsIgnoreCase("GET")) {
+                                final int getIndex = commands.indexOf(command);
+                                final String key = commands.get(getIndex + 1);
+
+                                final ValueWithOptions res = MEMORY.get(key);
+                                if (res == null || isExpired(res.getExpiredTime(), res.getSetTime())) {
+                                    MEMORY.remove(key);
+                                    outputStream.write("$-1\r\n".getBytes());
+                                    continue;
+                                }
+                                outputStream.write(bytesForOutputStream(res.getValue()));
+                            } else if (command.equalsIgnoreCase("SET")) {
+                                final int setIndex = commands.indexOf(command);
+
+                                final String key = commands.get(setIndex + 1);
+                                final String value = commands.get(setIndex + 2);
+                                long pxTime = 0;
+
+                                if (commands.size() > 4) {
+
+                                    final int pxIndex = commands.indexOf("px");
+                                    pxTime = Long.parseLong(commands.get(pxIndex + 1));
+                                }
+                                MEMORY.put(key, new ValueWithOptions(value, pxTime, System.currentTimeMillis()));
+                                outputStream.write(bytesForOutputStream("OK"));
+                            } else if (command.equalsIgnoreCase("ECHO")) {
+                                final int echoIndex = commands.indexOf(command);
+                                final String echoCommand = commands.get(echoIndex + 1);
+
+                                outputStream.write(bytesForOutputStream(echoCommand));
+                            } else if (command.equalsIgnoreCase("PING")) {
+                                outputStream.write(bytesForOutputStream("PONG"));
+                            } else if (command.equalsIgnoreCase("DOCS")) {
+                                outputStream.write(bytesForOutputStream(""));
+                            }
+                        }
+
+                        clientSocket.close();
+                    } catch (Exception e) {
                     }
                 });
                 thread.start();
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
         }
+    }
+
+
+    private static byte[] bytesForOutputStream(String str) {
+        return ("+" + str + "\r\n").getBytes();
     }
 
     private static boolean isExpired(final Long expiredTime, final Long setTime) {
@@ -135,5 +122,18 @@ public class Main {
             this.expiredTime = expiredTime;
             this.setTime = setTime;
         }
+
+        public String getValue() {
+            return value;
+        }
+
+        public Long getExpiredTime() {
+            return expiredTime;
+        }
+
+        public Long getSetTime() {
+            return setTime;
+        }
     }
+
 }
