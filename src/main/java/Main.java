@@ -57,7 +57,7 @@ public class Main {
                                         outputStream.write("$-1\r\n".getBytes());
                                         continue;
                                     }
-                                    String realRes = "+" + res.value + " " + res.expiredTime + " " + res.setTime + "\r\n";
+                                    String realRes = "+" + res.value + "\r\n";
                                     outputStream.write(realRes.getBytes());
                                 } else {
                                     outputStream.write("$-1\r\n".getBytes());
